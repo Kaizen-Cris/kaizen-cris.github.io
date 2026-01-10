@@ -37,8 +37,10 @@
     margin-bottom: 16px;
     float: left;
   }
-  .picture {
-    float: right;
+  .logo-img {
+    max-width: 180px;   /* tamanho padrão desktop */
+    width: 100%;
+    height: auto;
   }
   h1 {
     margin-bottom: 16px;
@@ -97,8 +99,7 @@
     font-weight: 600;
     border-radius: 8px;
     text-align: center;
-    padding: 10px;
-    
+    padding: 10px;   
   }
   
   td {
@@ -128,6 +129,15 @@
   td strong {
   color: #111827;
   }
+  
+  @media (max-width: 768px) {
+  .logo-img {
+    max-width: 140px; /* tamanho mínimo aceitável no celular */
+  }
+  }
+
+
+
 </style>
 </head>
 
@@ -148,9 +158,7 @@
       <div id="picture">
         <img src="https://sapporo.com.br/wp-content/uploads/2021/12/logo-SAPPORO-200x77.png" 
         alt="Sapporo" 
-        style="
-          width: 100%;
-          height:100%;"> 
+        class="logo-img"> 
       </div>
     </div>
   </div>
