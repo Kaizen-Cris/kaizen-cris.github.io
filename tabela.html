@@ -176,7 +176,7 @@
     <header>
       <div id="logo">
         <div id="picture">
-        <img src="https://sapporo.com.br/wp-content/uploads/2021/12/logo-SAPPORO-200x77.png" 
+        <img src="img/sapporo.png" 
         alt="Sapporo" 
         class="logo-img"> 
         </div>
@@ -192,6 +192,20 @@
           ← Trocar estado
         </a>
       </div>
+
+      <button id="btn-exportar" onclick="baixarPlanilhaXLSX()"
+        style="
+          margin-top:12px;
+          padding:8px 14px;
+          font-size:13px;
+          border:none;
+          border-radius:6px;
+          background:#16a34a;
+          color:#fff;
+          cursor:pointer;">
+          ⬇️ Baixar planilha Excel
+      </button>
+
     
     </header>
   </div>
@@ -227,6 +241,7 @@
 
 
   
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 
 <script>
@@ -281,12 +296,121 @@ function calcularPreco(precoBase, aliqInter, iva, aliqDest) {
   return precoBase + (valor1 - valor2);
 }
 
+    /* Função do Botão de Planilha v */
+function baixarPlanilhaXLSX() {
+  if (!uf || dadosGlobais.length === 0) {
+    alert("Selecione um estado válido.");
+    return;
+  }
+
+  const ufSheet = uf.toLowerCase();
+  const nomeEstado = estados[uf] || uf;
+  const dataHoje = new Date().toLocaleDateString("pt-BR");
+
+  const linhas = [];
+
+  // Cabeçalho visual
+  linhas.push([`Tabela de Preços – ${nomeEstado} (${uf})`]);
+  linhas.push(["Valores calculados automaticamente conforme o estado"]);
+  linhas.push([`Data de geração: ${dataHoje}`]);
+  linhas.push([]); // linha em branco
+
+  // Cabeçalho da tabela
+  linhas.push([
+    "Produto",
+    "Preço Base",
+    "Alíquota Inter (%)",
+    "IVA (%)",
+    "Alíquota Destino (%)",
+    "Preço Final"
+  ]);
+
+  // Dados
+  dadosGlobais.forEach(row => {
+    const precoBase = parseFloat(row.precobase);
+    const aliqInter = parseFloat(row[`aliqinter_${ufSheet}`]) / 100;
+    const iva       = parseFloat(row[`iva_${ufSheet}`]) / 100;
+    const aliqDest  = parseFloat(row[`aliqdest_${ufSheet}`]) / 100;
+
+    if (isNaN(aliqInter) || isNaN(iva) || isNaN(aliqDest)) return;
+
+    const precoFinal = calcularPreco(precoBase, aliqInter, iva, aliqDest);
+
+    // garante 2 casas decimais no Excel
+    const precoFinalFormatado = Number(precoFinal.toFixed(2));
+    const precoBaseFormatado  = Number(precoBase.toFixed(2));
+
+    linhas.push([
+      row.produto,
+      row.ean,
+      precoBaseFormatado,
+      row.ncm,
+      row.cest,
+      aliqInter * 100,
+      iva * 100,
+      aliqDest * 100,
+      precoFinalFormatado
+      
+    ]);
+
+  });
+
+  // Criação da planilha
+  const ws = XLSX.utils.aoa_to_sheet(linhas);
+
+  // Formatar colunas de moeda (Preço Base e Preço Final)
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+
+  for (let R = 4; R <= range.e.r; R++) {
+    // Coluna B → Preço Base
+    const cellBase = XLSX.utils.encode_cell({ r: R, c: 1 });
+    if (ws[cellBase]) {
+      ws[cellBase].z = '"R$"#,##0.00';
+    }
+
+    // Coluna F → Preço Final
+    const cellFinal = XLSX.utils.encode_cell({ r: R, c: 5 });
+    if (ws[cellFinal]) {
+      ws[cellFinal].z = '"R$"#,##0.00';
+    }
+  }
+
+
+  // Mesclar células do cabeçalho
+  ws["!merges"] = [
+    { s: { r:0, c:0 }, e: { r:0, c:5 } },
+    { s: { r:1, c:0 }, e: { r:1, c:5 } },
+    { s: { r:2, c:0 }, e: { r:2, c:5 } }
+  ];
+
+    // Definir largura das colunas
+  ws['!cols'] = [
+    { wch: 40 }, // Coluna A - Produto
+    { wch: 14 }, // Preço Base
+    { wch: 18 }, // Aliq. Interestadual
+    { wch: 10 },  // IVA
+    { wch: 22 }, // Aliq. Destino
+    { wch: 14 }  // Preço Final
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Tabela de Preços");
+
+  XLSX.writeFile(wb, `tabela_precos_${uf}.xlsx`);
+}
+ /* Função do Botão de Planilha ^ */
+
   const conteudo = document.getElementById("conteudo");
     conteudo.classList.add("loading");
+
+  let dadosGlobais = [];
+
+
 
 fetch(SHEET_URL)
   .then(res => res.json())
   .then(dados => {
+    dadosGlobais = dados;
     
 
     let html = `
@@ -348,6 +472,8 @@ fetch(SHEET_URL)
     console.error(err);
   });
 
+  document.getElementById("btn-exportar")
+  ?.addEventListener("click", baixarPlanilha);
 
 
 
