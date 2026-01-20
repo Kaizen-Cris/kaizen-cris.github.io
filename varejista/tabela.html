@@ -205,8 +205,7 @@
 
   /* mantém a tabela do jeito do código da memória e evita “estouro” no mobile */
   #conteudo{
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: visible;
   }
 
   table{
@@ -243,6 +242,11 @@
   .valor{ text-align:right; white-space:nowrap; }
   td strong{ color: var(--text); }
 
+  .col-codigo {
+    text-align:right;
+    white-space:nowrap;
+  }
+
   .col-produto{
     white-space: normal;
     word-break: break-word;
@@ -272,6 +276,9 @@
 
     tbody td{ font-size: 13px; padding: 10px 8px; }
     thead th{ font-size: 12px; padding: 10px 8px; }
+    .col-codigo {
+      display: none;
+    }
   }
 
   /* =========================
@@ -375,7 +382,7 @@
 
     <div class="card">
       <ul class="bullets">
-        <li><b>•</b> Valores calculados automaticamente conforme o estado.</li>
+        <li><b>•</b> Valores calculados automaticamente conforme a tributação do estado.</li>
         <li><b>•</b> Informações dos produtos para cadastro <a href="../cadastro.html" target="_blank" rel="noopener">aqui</a>.</li>
         <li><b>•</b> Compras sem valor mínimo somente na <a href="https://loja.sapporo.com.br" target="_blank" rel="noopener">Loja online</a>.</li>
         <li><b>•</b> Dúvidas: fale com
@@ -713,7 +720,7 @@ if (uf && estados[uf]) {
         <table>
           <thead>
             <tr>
-              <th>Código</th>
+              <th class="col-codigo">Código</th>
               <th>Produto</th>
               <th>Preço base</th>
               <th>Preço final</th>
@@ -756,7 +763,7 @@ if (uf && estados[uf]) {
 
         html += `
           <tr>
-            <td class="valor">${escapeHtml(row.codigo ?? "")}</td>
+            <td class="col-codigo">${escapeHtml(row.codigo ?? "")}</td>
             <td class="col-produto">${produtoHtml}</td>
             <td class="valor">R$ ${precoBase.toFixed(2)}</td>
             <td class="valor"><strong>R$ ${precoFinal.toFixed(2)}</strong></td>
