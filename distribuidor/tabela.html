@@ -507,6 +507,7 @@ function baixarPlanilhaXLSX() {
   linhas.push([]);
 
   linhas.push([
+    "Código",
     "Produto",
     "EAN (Cód. de Barras)",
     "Preço Base (R$)",
@@ -540,6 +541,7 @@ function baixarPlanilhaXLSX() {
     const dunTxt = row.dun ? String(row.dun) : "";
 
     linhas.push([
+      row.codigo,
       row.produto || "",
       eanTxt,
       precoBaseNum,
@@ -558,16 +560,30 @@ function baixarPlanilhaXLSX() {
 
   const ws = XLSX.utils.aoa_to_sheet(linhas);
 
+  // --- Mesclas do cabeçalho (A até M) ---
   ws["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 12 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 12 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 12 } },
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 12 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 13 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 13 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 13 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 13 } },
   ];
 
+  // --- Larguras ---
   ws["!cols"] = [
-    { wch: 54 }, { wch: 18 }, { wch: 14 }, { wch: 10 }, { wch: 18 }, { wch: 12 },
-    { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 18 }, { wch: 12 },
+    { wch: 8 },  // Código
+    { wch: 54 }, // Produto
+    { wch: 18 }, // EAN
+    { wch: 14 }, // Preço Base
+    { wch: 10 }, // Desconto
+    { wch: 18 }, // NCM
+    { wch: 12 }, // CEST
+    { wch: 12 }, // Aliq Inter
+    { wch: 10 }, // IVA
+    { wch: 10 }, // ST
+    { wch: 14 }, // Preço Final
+    { wch: 10 }, // Qtd/Caixa
+    { wch: 18 }, // DUN
+    { wch: 12 }, // Validade
   ];
 
   const headerBg = "E30915";
@@ -612,7 +628,7 @@ function baixarPlanilhaXLSX() {
   });
 
   const headerRow = 4;
-  for (let C = 0; C <= 12; C++) {
+  for (let C = 0; C <= 13; C++) {
     const addr = XLSX.utils.encode_cell({ r: headerRow, c: C });
     setStyle(addr, {
       font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
@@ -625,13 +641,13 @@ function baixarPlanilhaXLSX() {
   const range = XLSX.utils.decode_range(ws["!ref"]);
 
   for (let R = 5; R <= range.e.r; R++) {
-    const cBase = XLSX.utils.encode_cell({ r: R, c: 2 });
+    const cBase = XLSX.utils.encode_cell({ r: R, c: 3 });
     if (ws[cBase]) ws[cBase].z = '"R$" #,##0.00';
 
-    const cFinal = XLSX.utils.encode_cell({ r: R, c: 9 });
+    const cFinal = XLSX.utils.encode_cell({ r: R, c: 10 });
     if (ws[cFinal]) ws[cFinal].z = '"R$" #,##0.00';
 
-    for (const C of [3, 6, 7, 8]) {
+    for (const C of [4, 7, 8, 9]) {
       const addr = XLSX.utils.encode_cell({ r: R, c: C });
       if (ws[addr]) ws[addr].z = "0.00%";
     }
@@ -649,9 +665,9 @@ function baixarPlanilhaXLSX() {
       if (R === 4) continue;
 
       let horizontal = "left";
-      if ([0, 1, 11].includes(C)) horizontal = "left";
-      if ([4, 5].includes(C)) horizontal = "center";
-      if ([2, 3, 6, 7, 8, 9, 10, 12].includes(C)) horizontal = "right";
+      if ([1, 2, 12].includes(C)) horizontal = "left";
+      if ([5, 6].includes(C)) horizontal = "center";
+      if ([0, 3, 4, 7, 8, 9, 10, 11, 13].includes(C)) horizontal = "right";
 
       setStyle(addr, {
         alignment: { horizontal, vertical: "center" },
