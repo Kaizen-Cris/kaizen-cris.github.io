@@ -381,7 +381,7 @@
       </div>
 
       <div class="header-title">
-        <h1 id="titulo-estado">Tabela de Preços Varejo</h1>
+        <h1 id="titulo-estado">Tabela de Preços Varejista</h1>
       </div>
 
       <div class="actions">
@@ -520,6 +520,7 @@ function baixarPlanilhaXLSX() {
 
   // Cabeçalho da tabela (linha 4)
   linhas.push([
+    "Código",
     "Produto",
     "EAN (Cód. de Barras)",
     "Preço Base (R$)",
@@ -554,6 +555,7 @@ function baixarPlanilhaXLSX() {
     const dunTxt = row.dun ? String(row.dun) : "";
 
     linhas.push([
+      row.codigo,
       row.produto || "",
       eanTxt,
       precoBaseNum,
@@ -571,16 +573,17 @@ function baixarPlanilhaXLSX() {
 
   const ws = XLSX.utils.aoa_to_sheet(linhas);
 
-  // --- Mesclas do cabeçalho (A até L) ---
+  // --- Mesclas do cabeçalho (A até M) ---
   ws["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 11 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 11 } },
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 11 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 12 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 12 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 12 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 12 } },
   ];
 
   // --- Larguras ---
   ws["!cols"] = [
+    { wch: 8 },  // Código
     { wch: 54 }, // Produto
     { wch: 18 }, // EAN
     { wch: 14 }, // Preço Base
@@ -645,7 +648,7 @@ function baixarPlanilhaXLSX() {
 
   // Cabeçalho da tabela (linha 4)
   const headerRow = 4;
-  for (let C = 0; C <= 11; C++) {
+  for (let C = 0; C <= 12; C++) {
     const addr = XLSX.utils.encode_cell({ r: headerRow, c: C });
     setStyle(addr, {
       font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
@@ -659,18 +662,18 @@ function baixarPlanilhaXLSX() {
   const range = XLSX.utils.decode_range(ws["!ref"]);
 
   // Formatos
-  // Preço Base (col 2) e Preço Final (col 8)
-  // Percentuais (cols 5,6,7)
+  // Preço Base (col 3) e Preço Final (col 9)
+  // Percentuais (cols 6,7,8)
   for (let R = 5; R <= range.e.r; R++) {
     // Moeda
-    const cBase = XLSX.utils.encode_cell({ r: R, c: 2 });
+    const cBase = XLSX.utils.encode_cell({ r: R, c: 3 });
     if (ws[cBase]) ws[cBase].z = '"R$" #,##0.00';
 
-    const cFinal = XLSX.utils.encode_cell({ r: R, c: 8 });
+    const cFinal = XLSX.utils.encode_cell({ r: R, c: 9 });
     if (ws[cFinal]) ws[cFinal].z = '"R$" #,##0.00';
 
     // Percentuais (como fração)
-    for (const C of [5, 6, 7]) {
+    for (const C of [6, 7, 8]) {
       const addr = XLSX.utils.encode_cell({ r: R, c: C });
       if (ws[addr]) ws[addr].z = "0.00%";
     }
@@ -696,13 +699,13 @@ function baixarPlanilhaXLSX() {
       let horizontal = "left";
 
       // Produto, EAN, DUN → esquerda
-      if ([0, 1, 10].includes(C)) horizontal = "left";
+      if ([1, 2, 11].includes(C)) horizontal = "left";
 
       // NCM/CEST → centro
-      if ([3, 4].includes(C)) horizontal = "center";
+      if ([4, 5].includes(C)) horizontal = "center";
 
       // Numéricos → direita
-      if ([2, 5, 6, 7, 8, 9, 11].includes(C)) horizontal = "right";
+      if ([0, 3, 6, 7, 8, 9, 10, 12].includes(C)) horizontal = "right";
 
       setStyle(addr, {
         alignment: { horizontal, vertical: "center" },
@@ -807,4 +810,3 @@ document.getElementById("btn-exportar")
 
 </body>
 </html>
-
