@@ -383,19 +383,50 @@ function isValidCNPJ(input){
   const cnpjEl = document.getElementById("cnpj");
   if (!cnpjEl) return;
 
-  cnpjEl.addEventListener("input", () => {
-    const start = cnpjEl.selectionStart || 0;
-    cnpjEl.value = maskCNPJ(cnpjEl.value);
+  function onlyDigits(v){
+    return String(v || "").replace(/\D+/g, "");
+  }
 
-    // tenta manter cursor estável (boa experiência)
-    const newPos = Math.min(cnpjEl.value.length, start + 1);
-    cnpjEl.setSelectionRange(newPos, newPos);
+  function maskCNPJ(d){
+    d = d.slice(0, 14);
+    return d
+      .replace(/^(\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3/$4")
+      .replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, "$1.$2.$3/$4-$5");
+  }
 
-    // enquanto digita, esconde erro
+  cnpjEl.addEventListener("input", (e) => {
+    const input = e.target;
+
+    // 🔹 posição do cursor antes
+    const cursorPos = input.selectionStart;
+
+    // 🔹 quantos dígitos existiam antes do cursor
+    const digitsBefore = onlyDigits(input.value.slice(0, cursorPos)).length;
+
+    // 🔹 valor limpo + máscara
+    const digits = onlyDigits(input.value);
+    const masked = maskCNPJ(digits);
+
+    input.value = masked;
+
+    // 🔹 recalcula posição correta do cursor
+    let newPos = 0;
+    let digitsCount = 0;
+
+    while (newPos < masked.length && digitsCount < digitsBefore) {
+      if (/\d/.test(masked[newPos])) digitsCount++;
+      newPos++;
+    }
+
+    input.setSelectionRange(newPos, newPos);
+
+    // limpa erro enquanto digita
     const err = document.getElementById("cnpj-erro");
     if (err) err.style.display = "none";
-    cnpjEl.style.borderColor = "";
-    cnpjEl.style.boxShadow = "";
+    input.style.borderColor = "";
+    input.style.boxShadow = "";
   });
 
   cnpjEl.addEventListener("blur", () => {
@@ -410,11 +441,10 @@ function isValidCNPJ(input){
       if (err) err.style.display = "none";
       cnpjEl.style.borderColor = "";
       cnpjEl.style.boxShadow = "";
-      // padroniza máscara ao sair do campo
-      cnpjEl.value = maskCNPJ(cnpjEl.value);
     }
   });
 })();
+
 
 document.getElementById("form-loja")?.addEventListener("submit", async (e) => {
   e.preventDefault();
